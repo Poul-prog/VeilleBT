@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp"
+    tools:context="com.martin.veillebt.ui.home.HomeFragment">
+
+    <TextView
+        android:id="@+id/tv_app_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Veille BT"
+        android:textAppearance="@style/TextAppearance.Material3.HeadlineLarge"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="32dp"/>
+
+    <Button
+        android:id="@+id/btn_scan_bracelet"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Scanner Bracelets"
+        app:layout_constraintTop_toBottomOf="@id/tv_app_title"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="48dp"
+        android:minHeight="56dp"/>
+<!--
+    <Button
+        android:id="@+id/btn_associate_phone"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Associer Téléphone Compagnon"
+        app:layout_constraintTop_toBottomOf="@id/btn_scan_bracelet"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="24dp"
+        android:minHeight="56dp"/>
+-->
+    <Button
+        android:id="@+id/btn_resume_scan"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Reprendre Scan Enregistré"
+        app:layout_constraintTop_toBottomOf="@id/btn_scan_bracelet"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="24dp"
+        android:minHeight="56dp"/>
+
+    <TextView
+        android:id="@+id/tv_warning_message"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Mise en garde : Cette technologie est une aide et ne doit en aucun cas entraîner une baisse de vigilance ou remplacer la surveillance humaine nécessaire. Elle ne garantit pas une détection infaillible dans toutes les situations."
+        android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+        android:gravity="center_horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="32dp"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

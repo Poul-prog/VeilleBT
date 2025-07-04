@@ -1,0 +1,35 @@
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:id="@+id/nav_graph"
+app:startDestination="@id/homeFragment">
+
+<fragment
+    android:id="@+id/homeFragment"
+    android:name="com.martin.veillebt.ui.home.HomeFragment"
+    android:label="fragment_home"
+    tools:layout="@layout/fragment_home" >
+
+    <action
+        android:id="@+id/action_homeFragment_to_enrollmentFragment"
+        app:destination="@id/enrollmentFragment" />
+    <!-- Actions depuis EnrollmentFragment si nécessaire -->
+    <!-- Par exemple, pour aller à un tableau de bord après avoir terminé
+    <action
+        android:id="@+id/action_enrollmentFragment_to_dashboardFragment"
+        app:destination="@id/dashboardFragment"
+        app:popUpTo="@id/homeFragment"
+        app:popUpToInclusive="false" />
+     -->
+
+</fragment>
+
+
+<fragment
+    android:id="@+id/enrollmentFragment"
+    android:name="com.martin.veillebt.ui.enrollment.EnrollmentFragment"
+    android:label="Enregistrement Bracelet"
+    tools:layout="@layout/fragment_enrollment" />
+
+</navigation>
