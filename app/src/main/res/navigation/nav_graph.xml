@@ -1,35 +1,56 @@
-
+<?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
-xmlns:app="http://schemas.android.com/apk/res-auto"
-xmlns:tools="http://schemas.android.com/tools"
-android:id="@+id/nav_graph"
-app:startDestination="@id/homeFragment">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment"> <!-- Assurez-vous que c'est votre VRAIE destination de départ -->
 
-<fragment
-    android:id="@+id/homeFragment"
-    android:name="com.martin.veillebt.ui.home.HomeFragment"
-    android:label="fragment_home"
-    tools:layout="@layout/fragment_home" >
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.martin.veillebt.ui.home.HomeFragment"
+        android:label="fragment_home"
+        tools:layout="@layout/fragment_home" >
 
-    <action
-        android:id="@+id/action_homeFragment_to_enrollmentFragment"
-        app:destination="@id/enrollmentFragment" />
-    <!-- Actions depuis EnrollmentFragment si nécessaire -->
-    <!-- Par exemple, pour aller à un tableau de bord après avoir terminé
-    <action
-        android:id="@+id/action_enrollmentFragment_to_dashboardFragment"
-        app:destination="@id/dashboardFragment"
-        app:popUpTo="@id/homeFragment"
-        app:popUpToInclusive="false" />
-     -->
+        <action
+            android:id="@+id/action_homeFragment_to_enrollmentFragment"
+            app:destination="@id/enrollmentFragment" />
+    </fragment>
 
-</fragment>
+    <fragment
+        android:id="@+id/enrollmentFragment"
+        android:name="com.martin.veillebt.ui.enrollment.EnrollmentFragment"
+        android:label="Enregistrement Bracelet"
+        tools:layout="@layout/fragment_enrollment_ble" >
 
+        <!-- Action pour aller de Enrollment vers Monitoring -->
+        <action
+            android:id="@+id/action_enrollmentFragment_to_monitoringFragment"
+            app:destination="@id/monitoringFragment"
+            app:popUpTo="@id/homeFragment"
+            app:popUpToInclusive="true" /> <!-- Exemple: Si on va à monitoring, on retire home et enrollment de la pile -->
 
-<fragment
-    android:id="@+id/enrollmentFragment"
-    android:name="com.martin.veillebt.ui.enrollment.EnrollmentFragment"
-    android:label="Enregistrement Bracelet"
-    tools:layout="@layout/fragment_enrollment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/monitoringFragment"
+        android:name="com.martin.veillebt.ui.dashboard.MonitoringFragment"
+        android:label="fragment_monitoring"
+        tools:layout="@layout/fragment_monitoring" />
+
+    <!--
+        Si vous avez un autre fragment, par exemple un DashboardFragment,
+        vous pouvez le définir ici comme ceci :
+
+        <fragment
+            android:id="@+id/dashboardFragment"
+            android:name="com.example.ui.dashboard.DashboardFragment"
+            android:label="fragment_dashboard"
+            tools:layout="@layout/fragment_dashboard" >
+
+            <action
+                android:id="@+id/action_dashboardFragment_to_someOtherFragment"
+                app:destination="@id/someOtherFragment" />
+        </fragment>
+    -->
 
 </navigation>

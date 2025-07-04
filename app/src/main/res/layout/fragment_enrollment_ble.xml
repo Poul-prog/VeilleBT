@@ -1,0 +1,85 @@
+<!-- res/layout/fragment_enrollment_ble.xml (Nouveau layout ou modification) -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.enrollment.EnrollmentFragment">
+
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="16dp"
+        android:textAlignment="center"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Approchez une balise..." />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilBeaconName"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="32dp"
+        android:hint="Nom de la balise"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvStatus">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etBeaconName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textCapWords" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+<TextView
+android:id="@+id/tvCandidateInfo"
+android:layout_width="0dp"
+android:layout_height="wrap_content"
+android:layout_marginTop="8dp"
+android:textAlignment="center"
+app:layout_constraintEnd_toEndOf="@+id/tilBeaconName"
+app:layout_constraintStart_toStartOf="@+id/tilBeaconName"
+app:layout_constraintTop_toBottomOf="@+id/tilBeaconName"
+tools:text="Balise détectée: 00:11:22:AA:BB:CC" />
+
+
+<Button
+android:id="@+id/btnNextBeacon"
+android:layout_width="0dp"
+android:layout_height="wrap_content"
+android:layout_marginBottom="16dp"
+android:text="Balise Suivante"
+app:layout_constraintBottom_toTopOf="@+id/btnFinishEnrollment"
+app:layout_constraintEnd_toEndOf="@+id/tilBeaconName"
+app:layout_constraintStart_toStartOf="@+id/tilBeaconName" />
+
+<Button
+android:id="@+id/btnFinishEnrollment"
+android:layout_width="0dp"
+android:layout_height="wrap_content"
+android:layout_marginBottom="32dp"
+android:text="Terminé"
+app:layout_constraintBottom_toBottomOf="parent"
+app:layout_constraintEnd_toEndOf="@+id/btnNextBeacon"
+app:layout_constraintStart_toStartOf="@+id/btnNextBeacon" />
+
+<TextView
+android:id="@+id/tvEnrolledCount"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:layout_marginBottom="16dp"
+app:layout_constraintBottom_toTopOf="@+id/btnNextBeacon"
+app:layout_constraintEnd_toEndOf="parent"
+app:layout_constraintStart_toStartOf="parent"
+tools:text="Balises enregistrées: 0" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>

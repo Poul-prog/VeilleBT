@@ -1,3 +1,4 @@
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -47,7 +48,7 @@ android {
 
 dependencies {
 
-    val cameraxVersion = "1.3.0"
+    // val cameraxVersion = "1.3.0" // Vous pouvez supprimer cette ligne si cameraxVersion est aussi dans libs.versions.toml (ce qui est le cas)
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)
@@ -64,7 +65,8 @@ dependencies {
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.material)
-    implementation(libs.play.services.mlkit.barcode.scanning.v1830)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.play.services.mlkit.barcode.scanning.v1830) // Considérez d'utiliser l'alias sans .v1830 si libs.play.services.mlkit.barcode.scanning est la version souhaitée
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -72,25 +74,31 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation(libs.hilt.android) // Hilt Android runtime
-    kapt(libs.hilt.compiler)          // Compilateur Hilt (pour le traitement des annotations)
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+
+    // Dépendances Room - Utilisation des alias de libs.versions.toml
+    implementation(libs.androidx.room.runtime) // Correction : Utiliser l'alias du catalogue
+    implementation(libs.androidx.room.ktx)     // Déjà correct
+
+    // Pour le processeur d'annotations de Room (kapt)
+    // Vous devez avoir un alias pour room-compiler dans votre libs.versions.toml
+    // Si ce n'est pas déjà le cas, je vais vous montrer comment l'ajouter ci-dessous.
+    // En supposant que l'alias s'appelle libs.androidx.room.compiler :
+    kapt(libs.androidx.room.compiler) // <--- C'est ici que le problème se situait (utilisation de $roomVersion au lieu de l'alias)
+
 
     // Pour le scan de QR Codes (ML Kit)
-    implementation(libs.play.services.mlkit.barcode.scanning) // Vérifiez la dernière version
+    implementation(libs.play.services.mlkit.barcode.scanning)
 
     // Pour Google Maps
-    implementation(libs.play.services.maps) // Vérifiez la dernière version
-    implementation(libs.play.services.location) // Vérifiez la dernière version pour la localisation
+    implementation(libs.play.services.maps)
+    implementation(libs.play.services.location)
 
     // Bluetooth (pas de dépendance spécifique pour les API BLE natives, elles font partie du SDK Android)
 
-    // Si vous utilisez Room pour la base de données locale
-    val roomVersion = "2.6.1" // Vérifiez la dernière version
-    implementation(libs.androidx.room.runtime)
-
-    // Optionnel : support Kotlin Coroutines pour Room
-    implementation(libs.androidx.room.ktx)
-
-
-
+    // Supprimez ces lignes car roomVersion est maintenant géré par libs.versions.toml:
+    // val roomVersion = "2.6.1" // Vérifiez la dernière version  <--- SUPPRIMER
+    // implementation("androidx.room:room-runtime:$roomVersion") <--- DÉJÀ CORRIGÉ CI-DESSUS
+    // implementation("androidx.room:room-ktx:$roomVersion")     <--- DÉJÀ CORRIGÉ CI-DESSUS
 }
