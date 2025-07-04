@@ -6,6 +6,8 @@
     <string name="scan_qr_initial_prompt">Veuillez scanner un QR code</string>
     <string name="scan_qr_prompt">Veuillez scanner le prochain QR code</string>
     <string name="qr_detected_with_number">QR Détecté N°%1$d : %2$s</string>
+    <string name="distance_meters_format">%dm</string>
+    <string name="volume_percentage_format">%d%%</string> <!-- Le double %% est pour échapper le caractère % -->
     <string name="alarm_silenced_on">Silencieux (ON)</string>
     <string name="alarm_silenced_off">Silencieux (OFF)</string>
 </resources>

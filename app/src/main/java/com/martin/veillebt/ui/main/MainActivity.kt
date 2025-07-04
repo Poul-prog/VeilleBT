@@ -14,6 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.martin.veillebt.databinding.ActivityMainBinding
 import com.martin.veillebt.ui.theme.VeilleBTTheme
+import com.martin.veillebt.R
+import dagger.hilt.android.AndroidEntryPoint
+@AndroidEntryPoint
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding // Si ViewBinding pour ActivityMainBinding
