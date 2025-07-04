@@ -24,6 +24,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.pow
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 // Classe pour représenter une balise surveillée avec son état
 data class MonitoredBeacon(
@@ -94,8 +96,8 @@ class MonitoringViewModel(application: Application, private val braceletReposito
         viewModelScope.launch {
             // Supposons que braceletRepository.getAllBracelets() retourne List<BleDevice> ou similaire
             // Vous devrez adapter ceci à votre modèle de données persisté (ex: BraceletEntity)
-            val enrolled = braceletRepository.getAllBraceletsSuspend().map { entity -> // Adaptez "entity" à votre modèle
-                MonitoredBeacon(entity.address, entity.name ?: "Sans nom")
+            val enrolled = braceletRepository.getAllBraceletsSuspend().map { braceletEntity -> // Adaptez "entity" à votre modèle
+                MonitoredBeacon(braceletEntity.address, braceletEntity.name ?: "Sans nom")
             }
             _monitoredBeacons.postValue(enrolled)
             if (enrolled.isNotEmpty()) {

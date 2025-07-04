@@ -33,7 +33,7 @@ import javax.inject.Inject
 @HiltViewModel
 class EnrollmentViewModel @Inject constructor(
     application: Application,
-    private val braceletRepository: BraceletRepository // Injection du Repository
+    private val braceletRepository: BraceletRepository, // Injection du Repository
     private val savedStateHandle: SavedStateHandle
 ) : AndroidViewModel(application) { // <--- FIN DE LA DÉCLARATION DE CLASSE, L'ACCOLADE OUVRE LE CORPS
 

@@ -1,37 +1,49 @@
 // Dans com/martin/veillebt/data/repository/BraceletRepositoryImpl.kt
 package com.martin.veillebt.data.repository
 
-import com.martin.veillebt.data.local.db.BraceletDao // Assurez-vous du chemin correct
-import com.martin.veillebt.data.local.model.BraceletEntity // Assurez-vous du chemin correct
+import com.martin.veillebt.data.local.db.BraceletDao
+import com.martin.veillebt.data.local.model.BraceletEntity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject // Important pour l'injection par Hilt si vous le souhaitez
-import javax.inject.Singleton // Si vous voulez que l'implémentation soit un singleton
+import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-// @Singleton // Optionnel ici, car le @Provides dans AppModule peut le gérer.
-// Si vous annotez ici avec @Singleton, Hilt saura le rendre singleton
-// même si le @Provides dans AppModule ne le spécifie pas explicitement pour l'implémentation.
-class BraceletRepositoryImpl @Inject constructor( // @Inject constructor permet à Hilt de créer cette classe
+class BraceletRepositoryImpl @Inject constructor(
     private val braceletDao: BraceletDao
-    // Injectez d'autres sources de données ici si nécessaire (ex: ApiService)
-) : BraceletRepository { // Implémente l'interface
+) : BraceletRepository {
 
     override suspend fun addBracelet(bracelet: BraceletEntity) {
-        braceletDao.addBracelet(bracelet)
+        // Envelopper les opérations de base de données dans un contexte IO est une bonne pratique
+        // si votre DAO n'utilise pas déjà les dispatchers en interne (la plupart le font avec suspend)
+        withContext(Dispatchers.IO) {
+            braceletDao.addBracelet(bracelet)
+        }
     }
 
     override suspend fun getBraceletByAddress(address: String): BraceletEntity? {
-        return braceletDao.getBraceletByAddress(address)
+        return withContext(Dispatchers.IO) {
+            braceletDao.getBraceletByAddress(address)
+        }
     }
 
     override fun getAllBracelets(): Flow<List<BraceletEntity>> {
+        // Les fonctions Flow de Room s'exécutent généralement sur un dispatcher approprié.
         return braceletDao.getAllBracelets()
     }
 
     override suspend fun deleteBraceletByAddress(address: String) {
-        braceletDao.deleteBracelet(address) // Assurez-vous que cette méthode existe dans votre DAO
+        withContext(Dispatchers.IO) {
+            // Assurez-vous que votre DAO a la méthode correspondante
+            // Par exemple, si le DAO s'appelle deleteBracelet :
+            braceletDao.deleteBracelet(address)
+        }
     }
 
-    // Implémentez les autres méthodes de l'interface
-    // override suspend fun updateBraceletName(address: String, newName: String) { ... }
-    // override suspend fun clearAllBracelets() { ... }
+    override suspend fun getAllBraceletsSuspend(): List<BraceletEntity> { // NOUVELLE FONCTION
+        return withContext(Dispatchers.IO) { // Bonne pratique pour les appels suspendus au DAO
+            braceletDao.getAllBraceletsSuspend()
+            // Implémentez les autres méthodes du code que vous aviez (getAllBraceletsSuspend, updateBraceletName, etc.)
+            // en utilisant withContext(Dispatchers.IO) pour les opérations suspendues.
+        }
+    }
 }

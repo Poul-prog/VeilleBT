@@ -1,33 +1,35 @@
+// Dans com/martin/veillebt/data/local/dao/BraceletDao.kt
 package com.martin.veillebt.data.local.db
 
-import androidx.lifecycle.LiveData
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
 import com.martin.veillebt.data.local.model.BraceletEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface BraceletDao {
 
+    // Pour APPEL 1: braceletDao.addBracelet(bracelet)
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertBracelet(bracelet: BraceletEntity)
+    suspend fun addBracelet(bracelet: BraceletEntity) // DOIT correspondre : suspend, nom, paramètre
 
-    @Query("SELECT * FROM bracelets ORDER BY name ASC")
-    fun getAllBracelets(): LiveData<List<BraceletEntity>> // Observable par l'UI
-
-    @Query("SELECT * FROM bracelets ORDER BY name ASC")
-    suspend fun getAllBraceletsSuspend(): List<BraceletEntity> // Pour usage dans coroutines
-
+    // Pour une méthode getBraceletByAddress (que vous aviez aussi)
     @Query("SELECT * FROM bracelets WHERE address = :address")
     suspend fun getBraceletByAddress(address: String): BraceletEntity?
 
-    @Delete
-    suspend fun deleteBracelet(bracelet: BraceletEntity)
+    // Pour APPEL 2: braceletDao.getAllBracelets()
+    @Query("SELECT * FROM bracelets ORDER BY name ASC")
+    fun getAllBracelets(): Flow<List<BraceletEntity>> // DOIT correspondre : nom, type de retour Flow
 
+    // Pour APPEL 3: braceletDao.deleteBracelet(address)
     @Query("DELETE FROM bracelets WHERE address = :address")
-    suspend fun deleteBraceletByAddress(address: String)
+    suspend fun deleteBracelet(address: String) // DOIT correspondre : suspend, nom, paramètre
 
-    @Query("UPDATE bracelets SET name = :newName WHERE address = :address")
-    suspend fun updateBraceletName(address: String, newName: String)
+    @Query("SELECT * FROM bracelets ORDER BY name ASC")
+    suspend fun getAllBraceletsSuspend(): List<BraceletEntity> // NOUVELLE FONCTION
 
-    @Query("DELETE FROM bracelets")
-    suspend fun clearAllBracelets()
+    // Ajoutez d'autres méthodes si nécessaire
 }
+
