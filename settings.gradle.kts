@@ -17,8 +17,8 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
     }
-}
 
-rootProject.name = "Veille BT"
-include(":app")
- 
+    }
+
+    rootProject.name = "Veille BT"
+    include(":app")

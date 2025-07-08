@@ -1,259 +1,188 @@
-package com.martin.veillebt.ui.dashboard // Ou com.martin.veillebt.ui.monitoring
+package com.martin.veillebt.ui.dashboard // Ou votre package approprié
 
-import android.Manifest
-import android.app.Activity
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothManager
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.semantics.text
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels // Correction: S'assurer que c'est le bon import
-import androidx.navigation.fragment.findNavController
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.martin.veillebt.R
-import com.martin.veillebt.databinding.FragmentMonitoringBinding
-import dagger.hilt.android.AndroidEntryPoint // <--- IMPORTANT: Annotation pour Hilt
+// import androidx.recyclerview.widget.RecyclerView // Remplacé par la référence directe au binding
+import com.martin.veillebt.databinding.FragmentMonitoringBinding // Importez votre ViewBinding généré
+import dagger.hilt.android.AndroidEntryPoint
+// Assurez-vous que le chemin d'importation vers BeaconAdapter est correct
+// import com.martin.veillebt.ui.dashboard.adapters.BeaconAdapter // Si dans un sous-package
+import com.martin.veillebt.ui.dashboard.BeaconAdapter // Si dans le même package
 
-// Importez vos Adapters pour RecyclerView ici si vous les utilisez
-// import com.martin.veillebt.ui.monitoring.adapter.MonitoredBeaconAdapter
-// import com.martin.veillebt.ui.monitoring.adapter.AlarmEventAdapter
-
-@AndroidEntryPoint // <--- NÉCESSAIRE POUR L'INJECTION HILT DANS LE FRAGMENT
+@AndroidEntryPoint
 class MonitoringFragment : Fragment() {
 
+    // ViewModel injecté par Hilt
+    private val viewModel: MonitoringViewModel by viewModels()
+
+    // View Binding pour accéder facilement aux vues du layout XML
     private var _binding: FragmentMonitoringBinding? = null
-    private val binding get() = _binding!!
+    private val binding get() = _binding!! // Cette propriété n'est valide qu'entre onCreateView et onDestroyView
 
-    // Hilt va maintenant fournir le ViewModel avec ses dépendances injectées.
-    // Plus besoin de la Factory personnalisée ici.
-    private val viewModel: MonitoringViewModel by viewModels() // <--- CORRECTION IMPORTANTE
+    // Votre adaptateur pour la liste des balises surveillées
+    private lateinit var monitoredBeaconAdapter: BeaconAdapter // Renommé pour plus de clarté
 
-    // Adapters pour les RecyclerViews (à créer et initialiser si nécessaire)
-    // private lateinit var beaconAdapter: MonitoredBeaconAdapter
-    // private lateinit var alarmAdapter: AlarmEventAdapter
-
-    private val requestPermissionsLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
-            if (permissions.entries.all { it.value }) {
-                checkBluetoothEnabledAndStartScan()
-            } else {
-                Toast.makeText(requireContext(), "Permissions BLE requises pour la surveillance.", Toast.LENGTH_LONG).show()
-                // Gérer le cas où les permissions ne sont pas accordées (par exemple, désactiver les fonctionnalités)
-            }
-        }
-
-    private val enableBluetoothLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                viewModel.startContinuousScan()
-            } else {
-                Toast.makeText(requireContext(), "Bluetooth doit être activé pour la surveillance.", Toast.LENGTH_SHORT).show()
-            }
-        }
+    // Si vous avez aussi un adaptateur pour les alarmes, déclarez-le ici
+    // private lateinit var alarmEventsAdapter: AlarmEventsAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentMonitoringBinding.inflate(inflater, container, false)
+        Log.d("MonitoringFragment", "onCreateView: Binding initialisé.")
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        Log.d("MonitoringFragment", "onViewCreated: Fragment view created.")
 
-        setupRecyclerViews()
-        setupClickListeners()
+        setupMonitoredBeaconsRecyclerView() // Configuration du RecyclerView pour les balises
+        // setupAlarmEventsRecyclerView() // Si vous avez un RecyclerView pour les alarmes
         setupObservers()
-        setupSliders()
+        setupClickListeners() // Pour vos boutons et sliders
 
-        // Déplacer la logique de permission et de démarrage ici pour s'assurer que le ViewModel est prêt
-        checkAndRequestPermissions()
+        Log.d("MonitoringFragment", "onViewCreated: Setup complet.")
     }
 
-    private fun checkAndRequestPermissions() {
-        if (allPermissionsGranted()) {
-            checkBluetoothEnabledAndStartScan()
-        } else {
-            requestPermissionsLauncher.launch(getRequiredPermissions())
+    private fun setupMonitoredBeaconsRecyclerView() {
+        monitoredBeaconAdapter = BeaconAdapter() // Créez une instance de votre adaptateur
+        binding.rvMonitoredBeacons.apply { // Utilisez l'ID de votre RecyclerView dans fragment_monitoring.xml
+            adapter = monitoredBeaconAdapter
+            layoutManager = LinearLayoutManager(requireContext())
+            // Optionnel : ajouter des ItemDecoration si besoin
         }
+        Log.d("MonitoringFragment", "setupMonitoredBeaconsRecyclerView: RecyclerView pour balises configuré.")
     }
 
-    private fun getRequiredPermissions(): Array<String> {
-        val permissions = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            permissions.add(Manifest.permission.BLUETOOTH_SCAN)
-            permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
-        } else {
-            permissions.add(Manifest.permission.BLUETOOTH)
-            permissions.add(Manifest.permission.BLUETOOTH_ADMIN)
+    /*
+    // Exemple si vous avez un RecyclerView pour les alarmes
+    private fun setupAlarmEventsRecyclerView() {
+        alarmEventsAdapter = AlarmEventsAdapter() // Créez l'adaptateur pour les alarmes
+        binding.rvAlarmEvents.apply { // Utilisez l'ID de votre RecyclerView d'alarmes
+            adapter = alarmEventsAdapter
+            layoutManager = LinearLayoutManager(requireContext())
         }
-        return permissions.toTypedArray()
+        Log.d("MonitoringFragment", "setupAlarmEventsRecyclerView: RecyclerView pour alarmes configuré.")
     }
-
-    private fun allPermissionsGranted() = getRequiredPermissions().all {
-        ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun checkBluetoothEnabledAndStartScan() {
-        val bluetoothManager = requireContext().getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
-        if (bluetoothManager == null) {
-            Toast.makeText(requireContext(), "Bluetooth n'est pas supporté sur cet appareil.", Toast.LENGTH_LONG).show()
-            return
-        }
-        val bluetoothAdapter = bluetoothManager.adapter
-        if (bluetoothAdapter == null) {
-            Toast.makeText(requireContext(), "Adaptateur Bluetooth non trouvé.", Toast.LENGTH_LONG).show()
-            return
-        }
-
-        if (!bluetoothAdapter.isEnabled) {
-            // Vérifier la permission BLUETOOTH_CONNECT avant de demander l'activation pour Android 12+
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                // Si la permission n'est pas accordée, on ne peut pas demander l'activation de manière programmatique.
-                // Vous devriez déjà l'avoir demandée via requestPermissionsLauncher.
-                // Informer l'utilisateur qu'il doit accorder la permission ET activer le Bluetooth.
-                Toast.makeText(requireContext(), "Permission BLUETOOTH_CONNECT et activation Bluetooth requises.", Toast.LENGTH_LONG).show()
-                // Optionnellement, vous pourriez relancer la demande de permission ou guider l'utilisateur.
-                return // Ne pas continuer si la permission CONNECT est manquante sur S+
-            }
-            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            enableBluetoothLauncher.launch(enableBtIntent)
-        } else {
-            viewModel.startContinuousScan() // Bluetooth est déjà activé et les permissions sont accordées (vérifié par allPermissionsGranted)
-        }
-    }
-
-
-    private fun setupRecyclerViews() {
-        // TODO: Initialiser et configurer vos adapters ici si vous en utilisez
-        // Exemple :
-        // val beaconAdapter = MonitoredBeaconAdapter { beacon -> /* Click listener item */ }
-        // binding.rvMonitoredBeacons.layoutManager = LinearLayoutManager(requireContext())
-        // binding.rvMonitoredBeacons.adapter = beaconAdapter
-        //
-        // val alarmAdapter = AlarmEventAdapter()
-        // binding.rvAlarmEvents.layoutManager = LinearLayoutManager(requireContext())
-        // binding.rvAlarmEvents.adapter = alarmAdapter
-
-        // Placeholder si pas encore d'adapters :
-        binding.rvMonitoredBeacons.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvAlarmEvents.layoutManager = LinearLayoutManager(requireContext())
-    }
-
-    private fun setupClickListeners() {
-        binding.btnSilenceAlarm.setOnClickListener {
-            viewModel.toggleSilenceAlarm()
-        }
-
-        binding.btnSearchMap.setOnClickListener {
-            // Assurez-vous que cette action est définie dans votre nav_graph.xml
-            // findNavController().navigate(R.id.action_monitoringFragment_to_mapFragment)
-            Toast.makeText(requireContext(), "Navigation vers la carte (TODO)", Toast.LENGTH_SHORT).show()
-        }
-
-        binding.btnTestAlarmVolume.setOnClickListener {
-            viewModel.testAlarmSound()
-        }
-    }
+    */
 
     private fun setupObservers() {
+        // Observateur pour les balises surveillées
         viewModel.monitoredBeacons.observe(viewLifecycleOwner) { beacons ->
-            // (beaconAdapter as? MonitoredBeaconAdapter)?.submitList(beacons) // Si vous utilisez ListAdapter
-            if (beacons.isNullOrEmpty()) {
-                // Optionnel: Afficher un message si aucune balise n'est surveillée
-                // binding.tvNoBeaconsMessage.visibility = View.VISIBLE (par exemple)
+            Log.d("MonitoringFragment_UI_Observer", "LiveData monitoredBeacons a émis. Taille: ${beacons.size}")
+            if (beacons.isNotEmpty()) {
+                beacons.forEachIndexed { index, beacon ->
+                    Log.d("MonitoringFragment_UI_Observer", "Balise[$index]: ${beacon.assignedName}, RSSI: ${beacon.rssi}, Dist: ${beacon.distance}, Visible: ${beacon.isVisible}, Lost: ${beacon.isSignalLost}, OutRange: ${beacon.isOutOfRange}")
+                }
             } else {
-                // binding.tvNoBeaconsMessage.visibility = View.GONE
+                Log.d("MonitoringFragment_UI_Observer", "La liste des balises surveillées est vide.")
             }
-            // Log.d("MonitoringFragment", "Monitored beacons updated: ${beacons?.size ?: 0}")
+            monitoredBeaconAdapter.submitList(beacons) // Mettre à jour l'adaptateur des balises
         }
 
+        // Observateur pour les alarmes actives
         viewModel.activeAlarms.observe(viewLifecycleOwner) { alarms ->
-            // (alarmAdapter as? AlarmEventAdapter)?.submitList(alarms) // Si vous utilisez ListAdapter
-            // Gérer la visibilité du conteneur d'alarmes ou un message "aucune alarme"
-            // Log.d("MonitoringFragment", "Active alarms updated: ${alarms?.size ?: 0}")
+            Log.d("MonitoringFragment_UI_Observer", "LiveData activeAlarms a émis. Taille: ${alarms.size}")
+            // Mettez à jour votre UI pour les alarmes (ex: adapter d'un autre RecyclerView)
+            // alarmEventsAdapter.submitList(alarms)
+            // Ou afficher un message, changer la couleur d'un bouton, etc.
+            binding.tvLabelAlarms.text = "Alarmes Actives (${alarms.size})" // Exemple simple
         }
 
+        // Observateur pour le seuil de distance d'alarme
         viewModel.alarmDistanceThreshold.observe(viewLifecycleOwner) { distance ->
-            binding.tvDistanceValue.text = getString(R.string.distance_meters_format, distance) // Utiliser les ressources string
+            Log.d("MonitoringFragment_UI_Observer", "LiveData alarmDistanceThreshold a émis: $distance m")
+            binding.tvDistanceValue.text = "${distance}m"
+            // Mettre à jour la position du Slider si ce n'est pas l'utilisateur qui l'a changé
             if (binding.sliderDistanceThreshold.value.toInt() != distance) {
                 binding.sliderDistanceThreshold.value = distance.toFloat()
             }
         }
 
+        // Observateur pour le volume d'alarme
         viewModel.alarmVolume.observe(viewLifecycleOwner) { volume ->
-            binding.tvVolumeValue.text = getString(R.string.volume_percentage_format, volume) // Utiliser les ressources string
+            Log.d("MonitoringFragment_UI_Observer", "LiveData alarmVolume a émis: $volume%")
+            binding.tvVolumeValue.text = "$volume%"
+            // Mettre à jour la position du Slider si ce n'est pas l'utilisateur qui l'a changé
             if (binding.sliderAlarmVolume.value.toInt() != volume) {
                 binding.sliderAlarmVolume.value = volume.toFloat()
             }
         }
 
-        viewModel.isAlarmSilenced.observe(viewLifecycleOwner) { silenced ->
-            binding.btnSilenceAlarm.text = if (silenced) getString(R.string.alarm_silenced_on) else getString(R.string.alarm_silenced_off)
-            // Optionnel : Changer l'apparence du bouton (couleur, icône)
+        // Observateur pour l'état silencieux de l'alarme
+        viewModel.isAlarmSilenced.observe(viewLifecycleOwner) { isSilenced ->
+            Log.d("MonitoringFragment_UI_Observer", "LiveData isAlarmSilenced a émis: $isSilenced")
+            binding.btnSilenceAlarm.text = if (isSilenced) "Silencieux ON" else "Silencieux OFF"
+            // Vous pourriez vouloir changer l'apparence du bouton
         }
+        Log.d("MonitoringFragment", "setupObservers: Observateurs LiveData configurés.")
     }
 
-    private fun setupSliders() {
-        binding.sliderDistanceThreshold.addOnChangeListener { _, value, fromUser ->
+    private fun setupClickListeners() {
+        binding.btnSilenceAlarm.setOnClickListener {
+            Log.d("MonitoringFragment", "Bouton Silencieux cliqué.")
+            viewModel.toggleSilenceAlarm()
+        }
+
+        binding.btnSearchMap.setOnClickListener {
+            Log.d("MonitoringFragment", "Bouton Recherche Carte cliqué.")
+            // Naviguer vers l'écran de la carte ou implémenter la logique de recherche
+            // findNavController().navigate(R.id.action_monitoringFragment_to_mapFragment) // Exemple
+            Toast.makeText(requireContext(), "Fonctionnalité Recherche Carte à implémenter", Toast.LENGTH_SHORT).show()
+        }
+
+        binding.sliderDistanceThreshold.addOnChangeListener { slider, value, fromUser ->
             if (fromUser) {
+                Log.d("MonitoringFragment", "Slider Distance changé par l'utilisateur: ${value.toInt()}m")
                 viewModel.setAlarmDistanceThreshold(value.toInt())
             }
         }
-        viewModel.alarmDistanceThreshold.value?.let {
-            binding.sliderDistanceThreshold.value = it.toFloat()
-            binding.tvDistanceValue.text = getString(R.string.distance_meters_format, it)
-        }
 
-
-        binding.sliderAlarmVolume.addOnChangeListener { _, value, fromUser ->
+        binding.sliderAlarmVolume.addOnChangeListener { slider, value, fromUser ->
             if (fromUser) {
+                Log.d("MonitoringFragment", "Slider Volume changé par l'utilisateur: ${value.toInt()}%")
                 viewModel.setAlarmVolume(value.toInt())
             }
         }
-        viewModel.alarmVolume.value?.let {
-            binding.sliderAlarmVolume.value = it.toFloat()
-            binding.tvVolumeValue.text = getString(R.string.volume_percentage_format, it)
-        }
-    }
 
-    override fun onResume() {
-        super.onResume()
-        // Le scan est démarré via checkAndRequestPermissions après la vérification des permissions
-        // et l'activation du Bluetooth si nécessaire.
-        // Si les permissions sont déjà accordées et le Bluetooth activé,
-        // on peut envisager de redémarrer le scan ici si ce n'est pas déjà fait.
-        // Mais la logique actuelle dans onViewCreated devrait suffire.
-        // On pourrait ajouter une vérification pour s'assurer que le scan tourne s'il le devrait :
-        if (allPermissionsGranted()) {
-            val btManager = requireContext().getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
-            if (btManager?.adapter?.isEnabled == true) {
-                // Si le ViewModel n'est pas déjà en train de scanner (vous auriez besoin d'un état dans le VM pour cela)
-                // viewModel.startContinuousScan() // Attention aux appels multiples
-            }
+        binding.btnTestAlarmVolume.setOnClickListener {
+            Log.d("MonitoringFragment", "Bouton Tester Volume cliqué.")
+            viewModel.testAlarmSound()
         }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        viewModel.stopContinuousScan() // Important pour économiser la batterie
+        Log.d("MonitoringFragment", "setupClickListeners: Listeners pour les vues configurés.")
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null // Important pour éviter les fuites de mémoire
+        _binding = null // Important pour éviter les fuites de mémoire avec ViewBinding
+        Log.d("MonitoringFragment", "onDestroyView: Binding mis à null.")
+    }
+
+    // Si vous aviez déjà des méthodes onResume/onPause pour gérer le scan,
+    // assurez-vous qu'elles appellent bien viewModel.startContinuousScan() et viewModel.stopContinuousScan()
+    // en fonction des permissions et de l'état du Bluetooth.
+    override fun onResume() {
+        super.onResume()
+        Log.d("MonitoringFragment", "onResume: Démarrage du scan continu si nécessaire.")
+        // Ici, vous voudrez probablement vérifier les permissions Bluetooth et si le BT est activé
+        // avant d'appeler startContinuousScan. Le ViewModel gère déjà certaines de ces vérifications,
+        // mais c'est une bonne pratique de s'en assurer aussi au niveau du Fragment avant d'initier.
+        // Par exemple, vous pourriez avoir une fonction checkPermissionsAndStartScan()
+        viewModel.startContinuousScan() // Le ViewModel vérifiera en interne les permissions/état BT
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.d("MonitoringFragment", "onPause: Arrêt du scan continu.")
+        viewModel.stopContinuousScan()
     }
 }
-
