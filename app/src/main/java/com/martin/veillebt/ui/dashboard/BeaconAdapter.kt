@@ -31,7 +31,7 @@ class BeaconAdapter : ListAdapter<MonitoredBeacon, BeaconAdapter.BeaconViewHolde
 
         fun bind(beacon: MonitoredBeacon) {
             nameTextView.text = beacon.assignedName
-            addressTextView.text = "Adresse: ${beacon.address}"
+            //addressTextView.text = "Adresse: ${beacon.address}"
             rssiTextView.text = "RSSI: ${beacon.rssi}"
             distanceTextView.text = if (beacon.distance != null) "Distance: ${"%.2f".format(beacon.distance)} m" else "Distance: N/A"
             // Mettez à jour d'autres états ici (ex: couleur de fond si signal perdu)

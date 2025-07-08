@@ -34,18 +34,7 @@ import kotlin.math.pow
 import kotlin.math.round
 
 // Classe pour représenter une balise surveillée avec son état
-data class MonitoredBeacon(
-    val address: String,
-    val assignedName: String,
-    var rssi: Int = -100, // Valeur par défaut pour "pas de signal"
-    var distance: Double? = null,
-    var lastSeenTimestamp: Long = 0L,
-    var isOutOfRange: Boolean = false,
-    var isSignalLost: Boolean = false
-) {
-    val isVisible: Boolean
-        get() = System.currentTimeMillis() - lastSeenTimestamp < SIGNAL_LOSS_THRESHOLD_MS
-}
+
 
 // Classe pour représenter une alarme
 data class AlarmEvent(

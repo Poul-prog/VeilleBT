@@ -20,5 +20,6 @@ dependencyResolutionManagement {
 
     }
 
+
     rootProject.name = "Veille BT"
     include(":app")
