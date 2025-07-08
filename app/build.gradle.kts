@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.kapt)
-    alias(libs.plugins.kotlin.parcelize)
+    //alias(libs.plugins.kotlin.parcelize)
 }
 
 android {
@@ -64,7 +64,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.material)
     implementation(libs.androidx.glance.appwidget)
-    implementation(libs.play.services.mlkit.barcode.scanning.v1830) // Considérez d'utiliser l'alias sans .v1830 si libs.play.services.mlkit.barcode.scanning est la version souhaitée
+    //implementation(libs.play.services.mlkit.barcode.scanning.v1830) // Considérez d'utiliser l'alias sans .v1830 si libs.play.services.mlkit.barcode.scanning est la version souhaitée
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -74,7 +74,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
-
+    implementation(libs.kotlin.parcelize.runtime)
     // Dépendances Room - Utilisation des alias de libs.versions.toml
     implementation(libs.androidx.room.runtime) // Correction : Utiliser l'alias du catalogue
     implementation(libs.androidx.room.ktx)     // Déjà correct
