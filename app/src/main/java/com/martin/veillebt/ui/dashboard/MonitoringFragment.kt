@@ -173,17 +173,28 @@ class MonitoringFragment : Fragment() {
     // en fonction des permissions et de l'état du Bluetooth.
     override fun onResume() {
         super.onResume()
-        Log.d("MonitoringFragment", "onResume: Démarrage du scan continu si nécessaire.")
-        // Ici, vous voudrez probablement vérifier les permissions Bluetooth et si le BT est activé
-        // avant d'appeler startContinuousScan. Le ViewModel gère déjà certaines de ces vérifications,
-        // mais c'est une bonne pratique de s'en assurer aussi au niveau du Fragment avant d'initier.
-        // Par exemple, vous pourriez avoir une fonction checkPermissionsAndStartScan()
-        viewModel.startContinuousScan() // Le ViewModel vérifiera en interne les permissions/état BT
+        Log.d("MonitoringFragment", "onResume: Vérification état BT et permissions avant de potentiellement démarrer scan.")
+        // Le ViewModel gère déjà le démarrage initial dans son init si des balises existent.
+        // On pourrait ici appeler startContinuousScan si l'on veut s'assurer qu'il redémarre
+        // après un onPause, mais il faut être prudent pour ne pas causer de multiples démarrages.
+
+        // Solution plus simple : laissez le ViewModel gérer le scan.
+        // Si vous voulez explicitement redémarrer après un onPause (où vous appelez stop):
+        // 1. Vérifiez les permissions et l'état du Bluetooth ici.
+        // 2. Appelez viewModel.startContinuousScan().
+        // Le ViewModel avec sa logique isBleScanPhysicallyActive DEVRAIT empêcher les démarrages multiples.
+        // S'il y a toujours un problème, c'est que isBleScanPhysicallyActive n'est pas synchronisé.
+
+        // Pour l'instant, pour simplifier et laisser le ViewModel gérer :
+        // Vous pourriez même commenter l'appel suivant si le ViewModel le gère bien après onPause.
+        // Cependant, si vous arrêtez explicitement le scan dans onPause,
+        // vous DEVEZ le redémarrer dans onResume.
+        viewModel.startContinuousScan()
     }
 
     override fun onPause() {
         super.onPause()
         Log.d("MonitoringFragment", "onPause: Arrêt du scan continu.")
-        viewModel.stopContinuousScan()
+        viewModel.stopContinuousScan() // C'est bien d'arrêter ici
     }
 }

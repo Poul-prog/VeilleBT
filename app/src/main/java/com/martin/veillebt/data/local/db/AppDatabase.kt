@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.martin.veillebt.data.local.model.BraceletEntity
 
-@Database(entities = [BraceletEntity::class], version = 1, exportSchema = false)
+@Database(entities = [BraceletEntity::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun braceletDao(): BraceletDao

@@ -24,7 +24,9 @@ object AppModule {
             context.applicationContext,
             AppDatabase::class.java,
             "veille_bt_database" // Nom de votre base de données
-        ).build()
+        )
+            .fallbackToDestructiveMigration(false)
+            .build()
     }
 
     @Provides
