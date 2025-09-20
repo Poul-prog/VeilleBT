@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.dashboard.MonitoringFragment">
+
+    <!-- Bouton pour démarrer/arrêter le service -->
+    <Button
+        android:id="@+id/btnToggleBackgroundMonitoring"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/start_intensive_monitoring"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"/>
+
+    <!-- Indicateur d'état des alarmes -->
+    <TextView
+        android:id="@+id/tvAlarmStatusIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="ALARMES (2)"
+        android:visibility="gone"
+        android:textColor="@android:color/holo_red_dark"
+        android:textStyle="bold"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/btnToggleBackgroundMonitoring"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- RecyclerView pour les balises -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvMonitoredBeacons"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/tvAlarmStatusIndicator"
+        app:layout_constraintBottom_toTopOf="@+id/guideline_sliders"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        tools:listitem="@layout/item_monitored_beacon" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_sliders"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.65" />
+
+
+    <!-- Slider pour le seuil de distance -->
+    <TextView
+        android:id="@+id/labelDistanceThreshold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Distance Alarme:"
+        app:layout_constraintTop_toBottomOf="@id/guideline_sliders"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"/>
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/sliderDistanceThreshold"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:valueFrom="5.0"
+        android:valueTo="100.0"
+        android:stepSize="5.0"
+        android:value="30.0"
+        app:layout_constraintTop_toBottomOf="@id/labelDistanceThreshold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/tvDistanceThresholdValue"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="8dp"/>
+
+    <TextView
+        android:id="@+id/tvDistanceThresholdValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="30 m"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/sliderDistanceThreshold"
+        app:layout_constraintBottom_toBottomOf="@id/sliderDistanceThreshold"
+        android:layout_marginEnd="16dp"/>
+
+    <!-- Slider pour le volume de l'alarme -->
+    <TextView
+        android:id="@+id/labelAlarmVolume"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Volume Alarme:"
+        app:layout_constraintTop_toBottomOf="@id/sliderDistanceThreshold"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"/>
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/sliderAlarmVolume"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:valueFrom="0.0"
+        android:valueTo="100.0"
+        android:stepSize="10.0"
+        android:value="80.0"
+        app:layout_constraintTop_toBottomOf="@id/labelAlarmVolume"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/tvAlarmVolumeValue"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="8dp"/>
+
+    <TextView
+        android:id="@+id/tvAlarmVolumeValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="80 %"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/sliderAlarmVolume"
+        app:layout_constraintBottom_toBottomOf="@id/sliderAlarmVolume"
+        android:layout_marginEnd="16dp"/>
+
+    <!-- Boutons d'action -->
+    <Button
+        android:id="@+id/btnSilenceAlarm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/button_silence_alarm_on"
+        app:layout_constraintTop_toBottomOf="@id/sliderAlarmVolume"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnTestAlarmVolume"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        android:layout_marginTop="24dp"/>
+
+    <Button
+        android:id="@+id/btnTestAlarmVolume"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/button_test_volume"
+        app:layout_constraintTop_toTopOf="@id/btnSilenceAlarm"
+        app:layout_constraintStart_toEndOf="@id/btnSilenceAlarm"
+        app:layout_constraintEnd_toStartOf="@+id/btnSearchMap"
+        android:layout_marginStart="8dp"/>
+
+    <Button
+        android:id="@+id/btnSearchMap"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/button_search_map"
+        app:layout_constraintTop_toTopOf="@id/btnSilenceAlarm"
+        app:layout_constraintStart_toEndOf="@id/btnTestAlarmVolume"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="8dp"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

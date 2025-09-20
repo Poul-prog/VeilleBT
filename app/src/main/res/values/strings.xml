@@ -1,13 +1,28 @@
 <resources>
     <string name="app_name">Veille BT</string>
-    <string name="google_maps_key" />
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="scan_qr_initial_prompt">Veuillez scanner un QR code</string>
-    <string name="scan_qr_prompt">Veuillez scanner le prochain QR code</string>
-    <string name="qr_detected_with_number">QR Détecté N°%1$d : %2$s</string>
-    <string name="distance_meters_format">%dm</string>
-    <string name="volume_percentage_format">%d%%</string> <!-- Le double %% est pour échapper le caractère % -->
-    <string name="alarm_silenced_on">Silencieux (ON)</string>
-    <string name="alarm_silenced_off">Silencieux (OFF)</string>
+
+    <!-- Chaînes existantes -->
+    <string name="title_enrollment">Enregistrement</string>
+    <string name="title_monitoring">Surveillance</string>
+    <string name="title_settings">Paramètres</string>
+
+    <!-- NOUVELLES CHAÎNES À AJOUTER -->
+    <string name="start_intensive_monitoring">Démarrer Surveillance Intensive</string>
+    <string name="stop_intensive_monitoring">Arrêter Surveillance Intensive</string>
+
+    <!-- Autres chaînes que vous pourriez avoir ou ajouter -->
+    <string name="label_monitored_beacons">Balises Surveillées</string>
+    <string name="label_active_alarms">Alarmes Actives</string>
+    <string name="label_alarm_options">Options d\'Alarme</string>
+    <string name="label_distance_threshold">Distance d\'alarme (m):</string>
+    <string name="label_alarm_volume">Volume d\'alarme (%):</string>
+    <string name="button_test_volume">Tester Volume</string>
+    <string name="button_silence_alarm_on">Silencieux</string>
+    <string name="button_silence_alarm_off">Réactiver Son</string>
+    <string name="button_search_map">Recherche Carte</string>
+    <string name="status_no_active_alarms">Aucune Alarme Active</string>
+    <string name="status_alarms_active">ALARMES (%d)</string> <!-- %d sera remplacé par un nombre -->
+    <string name="google_maps_key" translatable="false">VOTRE_CLE_API_GOOGLE_MAPS_ICI</string>
+    <!-- translatable="false" est une bonne pratique pour les clés API -->
+
 </resources>

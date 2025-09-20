@@ -170,11 +170,11 @@ class EnrollmentViewModel @Inject constructor(
                     try {
                         val braceletEntity = BraceletEntity(
                             address = currentCandidate.address,
-                            name = currentCandidate.assignedName,
+                            assignedName = currentCandidate.assignedName,
                         )
                         // CET APPEL DEVRAIT MAINTENANT FONCTIONNER CAR braceletRepository EST MEMBRE DE CETTE CLASSE
                         braceletRepository.addBracelet(braceletEntity)
-                        Log.d("EnrollmentVM", "Balise enregistrée dans Room: Nom=${braceletEntity.name}, Adresse=${braceletEntity.address}")
+                        Log.d("EnrollmentVM", "Balise enregistrée dans Room: Nom=${braceletEntity.assignedName}, Adresse=${braceletEntity.address}")
 
                         val updatedSessionList = _enrolledDevicesThisSession.value?.toMutableList() ?: mutableListOf()
                         if (!updatedSessionList.any { it.address == currentCandidate.address }) {

@@ -1,35 +1,47 @@
-// Dans com/martin/veillebt/data/local/dao/BraceletDao.kt
 package com.martin.veillebt.data.local.db
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.*
 import com.martin.veillebt.data.local.model.BraceletEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface BraceletDao {
 
-    // Pour APPEL 1: braceletDao.addBracelet(bracelet)
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun addBracelet(bracelet: BraceletEntity) // DOIT correspondre : suspend, nom, paramètre
+    suspend fun addBracelet(bracelet: BraceletEntity)
 
-    // Pour une méthode getBraceletByAddress (que vous aviez aussi)
+    @Update
+    suspend fun updateBracelet(bracelet: BraceletEntity) // Utile pour les mises à jour générales
+
     @Query("SELECT * FROM bracelets WHERE address = :address")
     suspend fun getBraceletByAddress(address: String): BraceletEntity?
 
-    // Pour APPEL 2: braceletDao.getAllBracelets()
-    @Query("SELECT * FROM bracelets ORDER BY name ASC")
-    fun getAllBracelets(): Flow<List<BraceletEntity>> // DOIT correspondre : nom, type de retour Flow
+    @Query("SELECT * FROM bracelets ORDER BY assignedName ASC") // Ou un autre ordre
+    fun getAllBracelets(): Flow<List<BraceletEntity>>
 
-    // Pour APPEL 3: braceletDao.deleteBracelet(address)
+    @Query("SELECT * FROM bracelets")
+    suspend fun getAllBraceletsOnce(): List<BraceletEntity>
+
     @Query("DELETE FROM bracelets WHERE address = :address")
-    suspend fun deleteBracelet(address: String) // DOIT correspondre : suspend, nom, paramètre
+    suspend fun deleteBraceletByAddress(address: String) // Assurez-vous que le nom correspond à l'appelant
 
-    @Query("SELECT * FROM bracelets ORDER BY name ASC")
-    suspend fun getAllBraceletsSuspend(): List<BraceletEntity> // NOUVELLE FONCTION
+    // --- NOUVELLE MÉTHODE À AJOUTER (Option A) ---
+    @Query("UPDATE bracelets SET currentRssi = :rssi, currentDistance = :distance, lastSeenTimestamp = :lastSeen, isCurrentlyVisible = :isVisible WHERE address = :address")
+    suspend fun updateScanData(address: String, rssi: Int, distance: Double, lastSeen: Long, isVisible: Boolean)
 
-    // Ajoutez d'autres méthodes si nécessaire
+    @Query("UPDATE bracelets SET isSignalLost = :isSignalLost WHERE address = :address")
+    suspend fun updateSignalLostStatus(address: String, isSignalLost: Boolean)
+
+    @Query("UPDATE bracelets SET isOutOfRange = :isOutOfRange WHERE address = :address")
+    suspend fun updateOutOfRangeStatus(address: String, isOutOfRange: Boolean)
+
+    @Query("UPDATE bracelets SET isCurrentlyVisible = :isVisible WHERE address = :address") // Notez le nom de la colonne
+    suspend fun updateVisibilityStatus(address: String, isVisible: Boolean)
+
+    // Si vous avez besoin de mettre à jour d'autres champs :
+    // @Query("UPDATE bracelets SET name = :newName WHERE address = :address")
+    // suspend fun updateName(address: String, newName: String)
+
+    // @Query("UPDATE bracelets SET tx_power_at_1m = :txPower WHERE address = :address")
+    // suspend fun updateTxPower(address: String, txPower: Int)
 }
-

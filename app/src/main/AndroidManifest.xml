@@ -29,7 +29,8 @@
     <!-- Déclarer que votre application utilise des fonctionnalités BLE -->
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
 
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
@@ -55,6 +56,11 @@
         android:theme="@style/Theme.VeilleBT"
         tools:targetApi="31">
 
+        <service
+            android:name=".service.BleScanService"
+            android:foregroundServiceType="location"/>
+        <!-- Ou un autre type approprié, "connectedDevice" pourrait aussi être envisagé -->
+
         <!-- Clé API Google Maps déclarée UNE SEULE FOIS ici -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
@@ -72,6 +78,8 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+
 
         </activity>
 

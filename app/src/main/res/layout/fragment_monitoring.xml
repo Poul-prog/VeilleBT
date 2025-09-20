@@ -29,6 +29,17 @@
     app:layout_constraintEnd_toEndOf="parent"
     tools:listitem="@layout/item_monitored_beacon" />
 
+    <!-- Dans votre fichier fragment_monitoring.xml -->
+    <Button
+        android:id="@+id/btn_toggle_background_monitoring"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Démarrer Surveillance Intensive"
+        app:layout_constraintTop_toBottomOf="@+id/rvMonitoredBeacons"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"/>
+
     <!-- Partie Milieu: Alarmes -->
     <TextView
         android:id="@+id/tvLabelAlarms"

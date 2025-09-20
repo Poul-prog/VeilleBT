@@ -1,37 +1,67 @@
-package com.martin.veillebt.ui.dashboard // Ou votre package approprié
+package com.martin.veillebt.ui.dashboard
 
+import android.Manifest
+import android.app.ActivityManager
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.semantics.text
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.glance.visibility
 import androidx.recyclerview.widget.LinearLayoutManager
-// import androidx.recyclerview.widget.RecyclerView // Remplacé par la référence directe au binding
-import com.martin.veillebt.databinding.FragmentMonitoringBinding // Importez votre ViewBinding généré
+import com.martin.veillebt.R // Pour les ressources (ex: strings)
+import com.martin.veillebt.data.local.model.BraceletEntity // IMPORTATION DU MODÈLE
+import com.martin.veillebt.databinding.FragmentMonitoringBinding
+import com.martin.veillebt.service.BleScanService // CHEMIN VERS VOTRE SERVICE
 import dagger.hilt.android.AndroidEntryPoint
-// Assurez-vous que le chemin d'importation vers BeaconAdapter est correct
-// import com.martin.veillebt.ui.dashboard.adapters.BeaconAdapter // Si dans un sous-package
-import com.martin.veillebt.ui.dashboard.BeaconAdapter // Si dans le même package
+import kotlin.io.path.name
 
 @AndroidEntryPoint
 class MonitoringFragment : Fragment() {
 
-    // ViewModel injecté par Hilt
     private val viewModel: MonitoringViewModel by viewModels()
-
-    // View Binding pour accéder facilement aux vues du layout XML
     private var _binding: FragmentMonitoringBinding? = null
-    private val binding get() = _binding!! // Cette propriété n'est valide qu'entre onCreateView et onDestroyView
+    private val binding get() = _binding!!
+    private lateinit var monitoredBeaconAdapter: BeaconAdapter // Assurez-vous que BeaconAdapter est défini
 
-    // Votre adaptateur pour la liste des balises surveillées
-    private lateinit var monitoredBeaconAdapter: BeaconAdapter // Renommé pour plus de clarté
+    private val requiredPermissions = mutableListOf(
+        Manifest.permission.ACCESS_FINE_LOCATION
+    ).apply {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            add(Manifest.permission.BLUETOOTH_SCAN)
+            add(Manifest.permission.BLUETOOTH_CONNECT)
+        } else {
+            add(Manifest.permission.BLUETOOTH)
+            add(Manifest.permission.BLUETOOTH_ADMIN)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            add(Manifest.permission.FOREGROUND_SERVICE)
+        }
+        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        //     add(Manifest.permission.ACCESS_BACKGROUND_LOCATION) // Décommentez si nécessaire
+        // }
+    }.toTypedArray()
 
-    // Si vous avez aussi un adaptateur pour les alarmes, déclarez-le ici
-    // private lateinit var alarmEventsAdapter: AlarmEventsAdapter
+    private val requestPermissionsLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            if (permissions.entries.all { it.value }) {
+                Log.d("MonitoringFragment", "Toutes les permissions requises sont accordées.")
+                updateUiBasedOnServiceState()
+            } else {
+                Log.w("MonitoringFragment", "Certaines permissions ont été refusées.")
+                Toast.makeText(requireContext(), "Permissions requises pour la surveillance.", Toast.LENGTH_LONG).show()
+            }
+        }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -46,89 +76,93 @@ class MonitoringFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         Log.d("MonitoringFragment", "onViewCreated: Fragment view created.")
 
-        setupMonitoredBeaconsRecyclerView() // Configuration du RecyclerView pour les balises
-        // setupAlarmEventsRecyclerView() // Si vous avez un RecyclerView pour les alarmes
+        setupMonitoredBeaconsRecyclerView()
         setupObservers()
-        setupClickListeners() // Pour vos boutons et sliders
+        setupClickListeners()
 
+        checkAndRequestPermissions()
+        // updateUiBasedOnServiceState() est appelé dans onResume et après l'octroi des permissions
         Log.d("MonitoringFragment", "onViewCreated: Setup complet.")
     }
 
+    private fun checkAndRequestPermissions() {
+        val permissionsToRequest = requiredPermissions.filter {
+            ContextCompat.checkSelfPermission(requireContext(), it) != PackageManager.PERMISSION_GRANTED
+        }
+        if (permissionsToRequest.isNotEmpty()) {
+            Log.d("MonitoringFragment", "Demande des permissions: ${permissionsToRequest.joinToString()}")
+            requestPermissionsLauncher.launch(permissionsToRequest.toTypedArray())
+        } else {
+            Log.d("MonitoringFragment", "Toutes les permissions nécessaires sont déjà accordées.")
+        }
+    }
+
     private fun setupMonitoredBeaconsRecyclerView() {
-        monitoredBeaconAdapter = BeaconAdapter() // Créez une instance de votre adaptateur
-        binding.rvMonitoredBeacons.apply { // Utilisez l'ID de votre RecyclerView dans fragment_monitoring.xml
+        monitoredBeaconAdapter = BeaconAdapter() // Assurez-vous qu'il gère BraceletEntity
+        binding.rvMonitoredBeacons.apply {
             adapter = monitoredBeaconAdapter
             layoutManager = LinearLayoutManager(requireContext())
-            // Optionnel : ajouter des ItemDecoration si besoin
         }
-        Log.d("MonitoringFragment", "setupMonitoredBeaconsRecyclerView: RecyclerView pour balises configuré.")
+        Log.d("MonitoringFragment", "RecyclerView configuré.")
     }
 
-    /*
-    // Exemple si vous avez un RecyclerView pour les alarmes
-    private fun setupAlarmEventsRecyclerView() {
-        alarmEventsAdapter = AlarmEventsAdapter() // Créez l'adaptateur pour les alarmes
-        binding.rvAlarmEvents.apply { // Utilisez l'ID de votre RecyclerView d'alarmes
-            adapter = alarmEventsAdapter
-            layoutManager = LinearLayoutManager(requireContext())
-        }
-        Log.d("MonitoringFragment", "setupAlarmEventsRecyclerView: RecyclerView pour alarmes configuré.")
-    }
-    */
+// Dans MonitoringFragment.kt -> setupObservers()
 
     private fun setupObservers() {
-        // Observateur pour les balises surveillées
-        viewModel.monitoredBeacons.observe(viewLifecycleOwner) { beacons ->
-            Log.d("MonitoringFragment_UI_Observer", "LiveData monitoredBeacons a émis. Taille: ${beacons.size}")
-            if (beacons.isNotEmpty()) {
-                beacons.forEachIndexed { index, beacon ->
-                    Log.d("MonitoringFragment_UI_Observer", "Balise[$index]: ${beacon.assignedName}, RSSI: ${beacon.rssi}, Dist: ${beacon.distance}, Visible: ${beacon.isVisible}, Lost: ${beacon.isSignalLost}, OutRange: ${beacon.isOutOfRange}")
-                }
-            } else {
-                Log.d("MonitoringFragment_UI_Observer", "La liste des balises surveillées est vide.")
-            }
-            monitoredBeaconAdapter.submitList(beacons) // Mettre à jour l'adaptateur des balises
+        viewModel.monitoredBeacons.observe(viewLifecycleOwner) { beacons: List<BraceletEntity>? ->
+            Log.d("MonitoringFragment", "Liste des balises surveillées mise à jour: ${beacons?.size ?: "null"}")
+            monitoredBeaconAdapter.submitList(beacons?.let { ArrayList(it) } ?: emptyList())
         }
 
-        // Observateur pour les alarmes actives
-        viewModel.activeAlarms.observe(viewLifecycleOwner) { alarms ->
-            Log.d("MonitoringFragment_UI_Observer", "LiveData activeAlarms a émis. Taille: ${alarms.size}")
-            // Mettez à jour votre UI pour les alarmes (ex: adapter d'un autre RecyclerView)
-            // alarmEventsAdapter.submitList(alarms)
-            // Ou afficher un message, changer la couleur d'un bouton, etc.
-            binding.tvLabelAlarms.text = "Alarmes Actives (${alarms.size})" // Exemple simple
+        viewModel.activeAlarms.observe(viewLifecycleOwner) { activeAlarms: List<BraceletEntity>? ->
+            Log.d("MonitoringFragment", "Alarmes actives mises à jour: ${activeAlarms?.size ?: "null"}")
+            // Pour utiliser tvAlarmStatusIndicator, vous DEVEZ L'AJOUTER à votre fragment_monitoring.xml
+            // Exemple :
+            // if (activeAlarms.isNullOrEmpty()) {
+            //     binding.tvAlarmStatusIndicator.visibility = View.GONE
+            // } else {
+            //     binding.tvAlarmStatusIndicator.visibility = View.VISIBLE
+            //     binding.tvAlarmStatusIndicator.text = "ALARMES (${activeAlarms.size})"
+            // }
+            // Si vous ne l'ajoutez pas, commentez ou supprimez ces lignes.
         }
 
-        // Observateur pour le seuil de distance d'alarme
         viewModel.alarmDistanceThreshold.observe(viewLifecycleOwner) { distance ->
-            Log.d("MonitoringFragment_UI_Observer", "LiveData alarmDistanceThreshold a émis: $distance m")
-            binding.tvDistanceValue.text = "${distance}m"
-            // Mettre à jour la position du Slider si ce n'est pas l'utilisateur qui l'a changé
+            Log.d("MonitoringFragment", "Seuil de distance observé: $distance")
             if (binding.sliderDistanceThreshold.value.toInt() != distance) {
                 binding.sliderDistanceThreshold.value = distance.toFloat()
             }
+            // CORRECTION ICI: Utiliser l'ID du XML
+            binding.tvDistanceValue.text = "$distance m"
         }
 
-        // Observateur pour le volume d'alarme
         viewModel.alarmVolume.observe(viewLifecycleOwner) { volume ->
-            Log.d("MonitoringFragment_UI_Observer", "LiveData alarmVolume a émis: $volume%")
-            binding.tvVolumeValue.text = "$volume%"
-            // Mettre à jour la position du Slider si ce n'est pas l'utilisateur qui l'a changé
+            Log.d("MonitoringFragment", "Volume d'alarme observé: $volume")
             if (binding.sliderAlarmVolume.value.toInt() != volume) {
                 binding.sliderAlarmVolume.value = volume.toFloat()
             }
+            // CORRECTION ICI: Utiliser l'ID du XML
+            binding.tvVolumeValue.text = "$volume %"
         }
 
-        // Observateur pour l'état silencieux de l'alarme
         viewModel.isAlarmSilenced.observe(viewLifecycleOwner) { isSilenced ->
-            Log.d("MonitoringFragment_UI_Observer", "LiveData isAlarmSilenced a émis: $isSilenced")
-            binding.btnSilenceAlarm.text = if (isSilenced) "Silencieux ON" else "Silencieux OFF"
-            // Vous pourriez vouloir changer l'apparence du bouton
+            Log.d("MonitoringFragment", "État du silence de l'alarme observé: $isSilenced")
+            binding.btnSilenceAlarm.text = if (isSilenced) "Réactiver Son" else "Silencieux"
         }
-        Log.d("MonitoringFragment", "setupObservers: Observateurs LiveData configurés.")
     }
 
+
+
     private fun setupClickListeners() {
+        binding.btnToggleBackgroundMonitoring.setOnClickListener {
+            if (areAllPermissionsGranted()) {
+                toggleBleScanService()
+            } else {
+                Toast.makeText(requireContext(), "Permissions manquantes.", Toast.LENGTH_SHORT).show()
+                checkAndRequestPermissions()
+            }
+        }
+
         binding.btnSilenceAlarm.setOnClickListener {
             Log.d("MonitoringFragment", "Bouton Silencieux cliqué.")
             viewModel.toggleSilenceAlarm()
@@ -136,65 +170,91 @@ class MonitoringFragment : Fragment() {
 
         binding.btnSearchMap.setOnClickListener {
             Log.d("MonitoringFragment", "Bouton Recherche Carte cliqué.")
-            // Naviguer vers l'écran de la carte ou implémenter la logique de recherche
-            // findNavController().navigate(R.id.action_monitoringFragment_to_mapFragment) // Exemple
             Toast.makeText(requireContext(), "Fonctionnalité Recherche Carte à implémenter", Toast.LENGTH_SHORT).show()
         }
 
-        binding.sliderDistanceThreshold.addOnChangeListener { slider, value, fromUser ->
+        binding.sliderDistanceThreshold.addOnChangeListener { _, value, fromUser ->
             if (fromUser) {
-                Log.d("MonitoringFragment", "Slider Distance changé par l'utilisateur: ${value.toInt()}m")
                 viewModel.setAlarmDistanceThreshold(value.toInt())
             }
         }
 
-        binding.sliderAlarmVolume.addOnChangeListener { slider, value, fromUser ->
+        binding.sliderAlarmVolume.addOnChangeListener { _, value, fromUser ->
             if (fromUser) {
-                Log.d("MonitoringFragment", "Slider Volume changé par l'utilisateur: ${value.toInt()}%")
                 viewModel.setAlarmVolume(value.toInt())
             }
         }
 
         binding.btnTestAlarmVolume.setOnClickListener {
-            Log.d("MonitoringFragment", "Bouton Tester Volume cliqué.")
+            Log.d("MonitoringFragment", "Bouton Test Volume Alarme cliqué.")
             viewModel.testAlarmSound()
         }
-        Log.d("MonitoringFragment", "setupClickListeners: Listeners pour les vues configurés.")
+    }
+
+    private fun areAllPermissionsGranted(): Boolean {
+        return requiredPermissions.all {
+            ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    private fun isServiceRunning(serviceClass: Class<*>): Boolean {
+        val manager = requireActivity().getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        try {
+            for (service in manager.getRunningServices(Integer.MAX_VALUE)) {
+                if (serviceClass.name == service.service.className) {
+                    Log.d("MonitoringFragment", "${serviceClass.simpleName} est en cours (foreground: ${service.foreground}).")
+                    return true
+                }
+            }
+        } catch (e: SecurityException) {
+            Log.e("MonitoringFragment", "Erreur en vérifiant le service: ${e.message}")
+            return false
+        }
+        Log.d("MonitoringFragment", "${serviceClass.simpleName} n'est pas en cours.")
+        return false
+    }
+
+    private fun toggleBleScanService() {
+        val serviceClass = BleScanService::class.java
+        val serviceIntent = Intent(requireContext(), serviceClass)
+
+        if (isServiceRunning(serviceClass)) {
+            Log.d("MonitoringFragment", "Arrêt de BleScanService demandé.")
+            requireActivity().stopService(serviceIntent)
+        } else {
+            Log.d("MonitoringFragment", "Démarrage de BleScanService demandé.")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                requireActivity().startForegroundService(serviceIntent)
+            } else {
+                requireActivity().startService(serviceIntent)
+            }
+        }
+        // L'UI du bouton sera mise à jour par onResume ou par un observateur plus direct de l'état du service si implémenté
+        // Pour une réactivité immédiate, on peut forcer un check:
+        updateUiBasedOnServiceState()
+    }
+
+    private fun updateUiBasedOnServiceState() {
+        val isRunning = isServiceRunning(BleScanService::class.java)
+        Log.d("MonitoringFragment", "Mise à jour UI: Service en cours? $isRunning")
+        binding.btnToggleBackgroundMonitoring.text = if (isRunning) {
+            getString(R.string.stop_intensive_monitoring) // Ex: "Arrêter Surveillance"
+        } else {
+            getString(R.string.start_intensive_monitoring) // Ex: "Démarrer Surveillance"
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d("MonitoringFragment", "onResume: Mise à jour de l'UI.")
+        updateUiBasedOnServiceState()
+        // Le ViewModel charge les préférences et les balises dans son init et via collect.
+        // Il n'y a pas besoin de démarrer un scan explicite du ViewModel ici si le service est le principal acteur.
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null // Important pour éviter les fuites de mémoire avec ViewBinding
+        _binding = null
         Log.d("MonitoringFragment", "onDestroyView: Binding mis à null.")
-    }
-
-    // Si vous aviez déjà des méthodes onResume/onPause pour gérer le scan,
-    // assurez-vous qu'elles appellent bien viewModel.startContinuousScan() et viewModel.stopContinuousScan()
-    // en fonction des permissions et de l'état du Bluetooth.
-    override fun onResume() {
-        super.onResume()
-        Log.d("MonitoringFragment", "onResume: Vérification état BT et permissions avant de potentiellement démarrer scan.")
-        // Le ViewModel gère déjà le démarrage initial dans son init si des balises existent.
-        // On pourrait ici appeler startContinuousScan si l'on veut s'assurer qu'il redémarre
-        // après un onPause, mais il faut être prudent pour ne pas causer de multiples démarrages.
-
-        // Solution plus simple : laissez le ViewModel gérer le scan.
-        // Si vous voulez explicitement redémarrer après un onPause (où vous appelez stop):
-        // 1. Vérifiez les permissions et l'état du Bluetooth ici.
-        // 2. Appelez viewModel.startContinuousScan().
-        // Le ViewModel avec sa logique isBleScanPhysicallyActive DEVRAIT empêcher les démarrages multiples.
-        // S'il y a toujours un problème, c'est que isBleScanPhysicallyActive n'est pas synchronisé.
-
-        // Pour l'instant, pour simplifier et laisser le ViewModel gérer :
-        // Vous pourriez même commenter l'appel suivant si le ViewModel le gère bien après onPause.
-        // Cependant, si vous arrêtez explicitement le scan dans onPause,
-        // vous DEVEZ le redémarrer dans onResume.
-        viewModel.startContinuousScan()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        Log.d("MonitoringFragment", "onPause: Arrêt du scan continu.")
-        viewModel.stopContinuousScan() // C'est bien d'arrêter ici
     }
 }
